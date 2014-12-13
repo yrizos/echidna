@@ -2,10 +2,10 @@
 
 namespace Echidna;
 
-interface EntityBuilderInterface
+interface DocumentBuilderInterface
 {
 
-    public function getEntity();
+    public function getDocument();
 
     public function build(array $data = []);
 

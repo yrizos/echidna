@@ -4,7 +4,7 @@ namespace Echidna;
 
 use DataObject\DataObject;
 
-class Entity extends DataObject implements EntityInterface
+class Document extends DataObject implements DocumentInterface
 {
 
     private $new = true;

@@ -4,7 +4,7 @@ namespace Echidna;
 
 use DataObject\DataObjectInterface;
 
-interface EntityInterface extends DataObjectInterface, ResultInterface
+interface DocumentInterface extends DataObjectInterface, ResultInterface
 {
 
     public static function collection($collection = null);

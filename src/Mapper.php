@@ -5,14 +5,14 @@ namespace Echidna;
 class Mapper implements MapperInterface
 {
 
-    use EntityBuilderTrait;
+    use DocumentBuilderTrait;
 
     /** @var  \MongoDB */
     private $database;
 
-    public function __construct(\MongoDB $database, $entity)
+    public function __construct(\MongoDB $database, $document)
     {
-        $this->setDatabase($database)->setEntity($entity);
+        $this->setDatabase($database)->setDocument($document);
     }
 
     private function setDatabase(\MongoDB $database)
@@ -29,10 +29,11 @@ class Mapper implements MapperInterface
 
     public function getCollection()
     {
-        $entity     = $this->getEntity();
-        $collection = $entity::collection();
+        $database   = $this->getDatabase();
+        $document   = $this->getDocument();
+        $collection = $document::collection();
 
-        return $this->database->$collection;
+        return $database->$collection;
     }
 
     public function get($id)
@@ -55,7 +56,7 @@ class Mapper implements MapperInterface
     {
         $cursor = $this->getCollection()->find($query);
 
-        return new ResultSet($cursor, $this->getEntity());
+        return new Cursor($cursor, $this->getDocument());
     }
 
     /**
@@ -83,14 +84,14 @@ class Mapper implements MapperInterface
 
     /**
      * @todo
-     * @param EntityInterface $entity
+     * @param DocumentInterface $document
      */
-    public function save($entity)
+    public function save($document)
     {
-        if (is_array($entity)) $entity = $this->build($entity);
-        if (!($entity instanceof EntityInterface)) throw new \InvalidArgumentException();
+        if (is_array($document)) $document = $this->build($document);
+        if (!($document instanceof DocumentInterface)) throw new \InvalidArgumentException();
 
-        $result = $this->getCollection()->save($entity->getData());
+        $result = $this->getCollection()->save($document->getData());
 
         if (
             $result['ok'] != 1

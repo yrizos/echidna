@@ -2,17 +2,17 @@
 
 namespace Echidna;
 
-class ResultSet implements ResultSetInterface
+class Cursor implements CursorInterface
 {
 
-    use EntityBuilderTrait;
+    use DocumentBuilderTrait;
 
     /** @var \MongoCursor */
     private $cursor;
 
-    public function __construct(\MongoCursor $cursor, $entity)
+    public function __construct(\MongoCursor $cursor, $document)
     {
-        $this->setCursor($cursor)->setEntity($entity);
+        $this->setCursor($cursor)->setDocument($document);
     }
 
     private function setCursor(\MongoCursor $cursor)
@@ -43,7 +43,7 @@ class ResultSet implements ResultSetInterface
 
     public function key()
     {
-        return $this->cursor->key();
+        return $this->getCursor()->key();
     }
 
     public function valid()

@@ -2,7 +2,7 @@
 
 namespace Echidna;
 
-interface MapperInterface extends EntityBuilderInterface
+interface MapperInterface extends DocumentBuilderInterface
 {
 
     public function __construct(\MongoDB $database, $entity);
