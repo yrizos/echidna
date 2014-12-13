@@ -1,6 +1,7 @@
 {
 
     "name": "yrizos/echidna",
+    "homepage": "https://github.com/yrizos/echidna",
     "type": "library",
     "keywords": ["mongo", "mongodb"],
     "license": "MIT",
