@@ -6,7 +6,7 @@ php:
 services:
   - mongodb
 
-before_install: phpenv config-add .travis.php.ini
+before_install: phpenv config-add ./tests/.travis.php.ini
 
 install:
   - composer install
@@ -14,7 +14,7 @@ install:
 
 before_script: mkdir -p build/logs
 
-script: phpunit --configuration ./tests/phpunit.xml --coverage-clover ./build/logs/clover.xml
+script: phpunit --configuration ./tests/test-everything.xml --coverage-clover ./build/logs/clover.xml
 
 after_script:
   - CODECLIMATE_REPO_TOKEN=2daa3684fc65b0b443966c6c3ae4ddafc81aba296d0bac7085a3d0ede1a2aeb6 ./vendor/bin/test-reporter --stdout > codeclimate.json
