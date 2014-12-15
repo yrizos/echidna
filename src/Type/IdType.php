@@ -2,33 +2,42 @@
 
 namespace Echidna\Type;
 
-use Echidna\Type;
-
-class IdType extends Type
+class IdType extends StringType
 {
 
-    public function getPHPValue($value)
+    public function validate($value)
     {
-        if (
-            $value instanceof \MongoId
-            || is_scalar($value)
-        ) $value = (string) $value;
-
-        return is_string($value) ? $value : null;
-    }
-
-    public function getMongoValue($value)
-    {
-        if ($value === null) return null;
-
-        if (!($value instanceof \MongoId)) {
+        if (is_string($value)) {
             try {
                 $value = new \MongoId($value);
             } catch (\MongoException $e) {
-                return null;
+                return false;
             }
         }
 
-        return $value;
+        return ($value instanceof \MongoId);
     }
-} 
+
+    public function filter($value)
+    {
+        if ($value instanceof \MongoId) {
+            $value = (string) $value;
+            $value = parent::filter($value);
+        }
+
+        return !empty($value) ? $value : null;
+    }
+
+    public function filterMongo($value)
+    {
+        if (is_string($value)) {
+            try {
+                $value = new \MongoId($value);
+            } catch (\MongoException $e) {
+                $value = new \MongoId();
+            }
+        }
+
+        return ($value instanceof \MongoId) ? $value : null;
+    }
+}

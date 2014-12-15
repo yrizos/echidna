@@ -2,21 +2,15 @@
 
 namespace Echidna\Type;
 
-use Echidna\Type;
+use DataObject\Type\FloatType as ParentType;
+use Echidna\TypeInterface;
 
-class FloatType extends Type
+class FloatType extends ParentType implements TypeInterface
 {
 
-    public function getPHPValue($value)
+    public function filterMongo($value)
     {
-        return
-            $value !== null
-                ? (float) $value
-                : null;
+        return $this->filter($value);
     }
 
-    public function getMongoValue($value)
-    {
-        return $this->getPHPValue($value);
-    }
 } 

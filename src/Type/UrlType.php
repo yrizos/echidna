@@ -2,10 +2,10 @@
 
 namespace Echidna\Type;
 
-use DataObject\Type\IntegerType as ParentType;
+use DataObject\Type\UrlType as ParentType;
 use Echidna\TypeInterface;
 
-class IntegerType extends ParentType implements TypeInterface
+class UrlType extends ParentType implements TypeInterface
 {
 
     public function filterMongo($value)

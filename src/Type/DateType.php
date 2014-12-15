@@ -2,30 +2,30 @@
 
 namespace Echidna\Type;
 
-use Echidna\Type;
+use DataObject\Type\DateType as ParentType;
+use Echidna\TypeInterface;
 
-class DateType extends Type
+class DateType extends ParentType implements TypeInterface
 {
 
-    public function getPHPValue($value)
+    public function validate($value)
     {
-        if ($value === null) return null;
+        return ($value instanceof \MongoDate) || parent::validate($value);
+    }
 
-        if (is_string($value)) {
-            $value = new \DateTime($value);
-        } else if (is_numeric($value)) {
-            $value = new \DateTime('@' . $value);
-        } else if ($value instanceof \MongoDate) {
+    public function filter($value)
+    {
+        if ($value instanceof \MongoDate) {
             $value = new \DateTime('@' . $value->sec);
         }
 
-        return ($value instanceof \DateTime) ? $value : null;
+        $value = parent::filter($value);
+
+        return $value ? $value : null;
     }
 
-    public function getMongoValue($value)
+    public function filterMongo($value)
     {
-        if ($value === null) return null;
-
         if (is_string($value)) {
             $value = new \MongoDate(strtotime($value));
         } else if (is_numeric($value)) {
@@ -36,4 +36,4 @@ class DateType extends Type
 
         return ($value instanceof \MongoDate) ? $value : null;
     }
-} 
+}

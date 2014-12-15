@@ -2,21 +2,15 @@
 
 namespace Echidna\Type;
 
-use Echidna\Type;
+use DataObject\Type\StringType as ParentType;
+use Echidna\TypeInterface;
 
-class StringType extends Type
+class StringType extends ParentType implements TypeInterface
 {
 
-    public function getPHPValue($value)
+    public function filterMongo($value)
     {
-        return
-            $value !== null
-                ? (string) $value
-                : null;
+        return $this->filter($value);
     }
 
-    public function getMongoValue($value)
-    {
-        return $this->getPHPValue($value);
-    }
 } 
