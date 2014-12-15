@@ -1,7 +1,8 @@
-<phpunit bootstrap='./autoload.php'>
+<phpunit bootstrap="./autoload.php">
     <testsuites>
-        <testsuite name='EchidnaTest'>
-            <directory suffix='Test.php'>./src/</directory>
+        <testsuite name="document-type">
+            <file>./src/TypeTest.php</file>
+            <file>./src/DocumentTest.php</file>
         </testsuite>
     </testsuites>
 

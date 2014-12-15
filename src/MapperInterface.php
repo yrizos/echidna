@@ -21,6 +21,6 @@ interface MapperInterface extends DocumentBuilderInterface
 
     public function delete($id);
 
-    public function save($entity);
+    public function save(&$document);
 
 }

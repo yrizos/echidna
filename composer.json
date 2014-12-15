@@ -14,11 +14,13 @@
         }
     ],
 
+    "minimum-stability": "dev",
+
     "require": {
         "php": ">=5.4.0",
         "ext-mongo": "*",
 
-        "yrizos/data-object": "0.1.2"
+        "yrizos/data-object": "dev-master"
     },
 
     "autoload": {

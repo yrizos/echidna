@@ -31,14 +31,14 @@ class Cursor implements CursorInterface
     {
         $result = $this->cursor->current();
 
-        return $result ? $this->build($result) : null;
+        return $result ? $this->build($result, false) : null;
     }
 
     public function next()
     {
         $result = $this->cursor->next();
 
-        return $result ? $this->build($result) : null;
+        return $result ? $this->build($result, false) : null;
     }
 
     public function key()
@@ -61,18 +61,21 @@ class Cursor implements CursorInterface
         return $this->getCursor()->count(false);
     }
 
+    public function getData()
+    {
+        return iterator_to_array($this);
+    }
+
     public function toArray()
     {
-        $array = [];
+        $data = $this->getData();
 
-        foreach ($this as $value) $array[] = $value->toArray();
+        foreach ($data as $key => $value) {
+            if ($value instanceof DocumentInterface) $value = $value->getData();
 
-        return $array;
+            $data[$key] = $value;
+        }
+
+        return $data;
     }
-
-    public function toJson()
-    {
-        return json_encode($this->toArray());
-    }
-
 } 

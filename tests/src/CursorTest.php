@@ -47,4 +47,4 @@ class CursorTest extends Base
         }
     }
 
-} 
+}

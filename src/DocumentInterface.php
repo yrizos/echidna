@@ -2,11 +2,19 @@
 
 namespace Echidna;
 
-use DataObject\DataObjectInterface;
+use DataObject\EntityInterface;
 
-interface DocumentInterface extends DataObjectInterface, ResultInterface
+interface DocumentInterface extends EntityInterface
 {
+    public function setNew($new);
+
+    public function isNew();
+
+    public function getMongoData();
+
+    public function toArray();
 
     public static function collection($collection = null);
 
+    public static function fields();
 }

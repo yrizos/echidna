@@ -2,24 +2,57 @@
 
 namespace Echidna;
 
-use DataObject\DataObject;
+use DataObject\Entity;
 
-class Document extends DataObject implements DocumentInterface
+class Document extends Entity implements DocumentInterface
 {
 
     private $new = true;
-    private $modified = false;
 
     /** @var  string */
     protected static $collection;
 
-    public static function collection($collection = null)
+    public function setNew($new)
     {
-        if (null !== $collection) {
-            static::$collection = $collection;
+        $this->new = $new === true;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isNew()
+    {
+        return $this->new === true;
+    }
+
+    /**
+     * @param $type
+     * @return TypeInterface
+     */
+    protected function getType($type)
+    {
+        return Type::factory($type);
+    }
+
+    /**
+     * @return array
+     */
+    public function getMongoData()
+    {
+        $data  = $this->getRawData();
+        $array = [];
+        foreach ($data as $offset => $value) {
+            if (!$value) $value = $this->getDefault($offset);
+
+            $type  = $this->getFieldType($offset);
+            $value = $type->filterMongo($value);
+
+            $array[$offset] = $value;
         }
 
-        return static::$collection;
+        return $array;
     }
 
     public function toArray()
@@ -27,9 +60,20 @@ class Document extends DataObject implements DocumentInterface
         return $this->getData();
     }
 
-    public function toJson()
+    public static function collection($collection = null)
     {
-        return json_encode($this->toArray());
+        if (null !== $collection) static::$collection = $collection;
+
+        return static::$collection;
+    }
+
+    public static function fields()
+    {
+        return [
+            '_id'         => ['type' => 'id', 'default' => new \MongoId()],
+            'date_create' => ['type' => 'date', 'default' => new \DateTime()],
+            'date_update' => ['type' => 'date', 'default' => null],
+        ];
     }
 
 } 

@@ -2,11 +2,7 @@
 
 namespace Echidna;
 
-interface TypeInterface
+interface TypeInterface extends \DataObject\TypeInterface
 {
-
-    public function getPHPValue($value);
-
-    public function getMongoValue($value);
-
-} 
+    public function filterMongo($value);
+}

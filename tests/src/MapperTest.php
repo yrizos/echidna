@@ -5,29 +5,17 @@ namespace EchidnaTest;
 use Echidna\Mapper;
 use Echidna\MapperInterface;
 
-class MapperTest extends \PHPUnit_Framework_TestCase
+class MapperTest extends Base
 {
     /** @var  MapperInterface */
     protected $mapper;
 
-    /** @var  \MongoDB */
-    protected $database;
-
-    protected $data = [];
-
     public function setUp()
     {
-        $connection     = new \MongoClient();
-        $this->database = $connection->selectDB('echidna_test');
+        parent::setUp();
 
         $this->mapper = new Mapper($this->database, "EchidnaTest\\Document\\UserDocument");
         $this->mapper->getCollection()->drop();
-
-        for ($i = 0; $i < 5; $i++) {
-            $this->data[] = [
-                'username' => 'user' . $i
-            ];
-        }
     }
 
     public function testConstructor()
@@ -37,21 +25,49 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("EchidnaTest\\Document\\UserDocument", $this->mapper->getDocument());
     }
 
-    public function testBuild()
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    public function testConstructorException()
     {
-        $Document = $this->mapper->build(['name' => 'yannis']);
-
-        $this->assertInstanceOf("EchidnaTest\\Document\\UserDocument", $Document);
-        $this->assertEquals('yannis', $Document['name']);
+        $this->mapper = new Mapper($this->database, 'wrong');
     }
 
-    public function testSave()
+    public function testBuild()
+    {
+        $document = $this->mapper->build(['name' => 'yannis']);
+
+        $this->assertInstanceOf("EchidnaTest\\Document\\UserDocument", $document);
+        $this->assertEquals('yannis', $document['name']);
+    }
+
+    public function testSaveDocument()
     {
         foreach ($this->data as $value) {
-            $result = $this->mapper->save($value);
+            $document = $this->mapper->build($value);
 
-            $this->assertTrue($result);
+            $this->assertTrue($document->isNew());
+
+            $save = $this->mapper->save($document);
+
+            $this->assertTrue($save);
+            $this->assertFalse($document->isNew());
         }
+
+        $this->mapper->getCollection()->drop();
+    }
+
+    public function testSaveArray()
+    {
+        foreach ($this->data as $value) {
+            $save = $this->mapper->save($value);
+
+            $this->assertTrue($save);
+            $this->assertInstanceOf("Echidna\\DocumentInterface", $value);
+            $this->assertFalse($value->isNew());
+        }
+
+        $this->mapper->getCollection()->drop();
     }
 
     public function testFindOne()
@@ -61,26 +77,36 @@ class MapperTest extends \PHPUnit_Framework_TestCase
             $this->mapper->save($value);
 
             $query    = ['username' => $value['username']];
-            $Document = $this->mapper->findOne($query);
+            $document = $this->mapper->findOne($query);
 
-            $this->assertEquals($value['username'], $Document['username']);
+            $this->assertInstanceOf("Echidna\\DocumentInterface", $document);
+            $this->assertEquals($value['username'], $document['username']);
         }
+
+        $this->mapper->getCollection()->drop();
     }
 
     public function testFind()
     {
-        foreach ($this->data as $value) $this->mapper->save($value);
+        $ids = [];
+        foreach ($this->data as $value) {
+            $this->mapper->save($value);
+
+            $ids[$value['username']] = (string) $value['_id'];
+        }
 
         $result = $this->mapper->find(['$or' => [
-            ['username' => 'user2'],
-            ['username' => 'user3'],
+            ['username' => 'username2'],
+            ['username' => 'username3'],
         ]]);
 
         $result = $result->toArray();
 
         $this->assertEquals(2, count($result));
-        $this->assertEquals('user2', $result[0]['username']);
-        $this->assertEquals('user3', $result[1]['username']);
+        $this->assertEquals('username2', $result[$ids['username2']]['username']);
+        $this->assertEquals('username3', $result[$ids['username3']]['username']);
+
+        $this->mapper->getCollection()->drop();
     }
 
     public function testAll()
@@ -95,14 +121,10 @@ class MapperTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(count($this->data), count($result));
 
+        $result = array_values($result);
+
         foreach ($result as $key => $value) {
-            $this->assertEquals('user' . $key, $value['username']);
+            $this->assertEquals('username' . $key, $value['username']);
         }
     }
-
-    public function tearDown()
-    {
-        $this->mapper->getDatabase()->drop();
-    }
-
 }

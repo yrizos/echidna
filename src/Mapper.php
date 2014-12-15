@@ -10,11 +10,19 @@ class Mapper implements MapperInterface
     /** @var  \MongoDB */
     private $database;
 
+    /**
+     * @param \MongoDB $database
+     * @param DocumentInterface|string $document
+     */
     public function __construct(\MongoDB $database, $document)
     {
         $this->setDatabase($database)->setDocument($document);
     }
 
+    /**
+     * @param \MongoDB $database
+     * @return $this
+     */
     private function setDatabase(\MongoDB $database)
     {
         $this->database = $database;
@@ -22,11 +30,17 @@ class Mapper implements MapperInterface
         return $this;
     }
 
+    /**
+     * @return \MongoDB
+     */
     public function getDatabase()
     {
         return $this->database;
     }
 
+    /**
+     * @return \MongoCollection
+     */
     public function getCollection()
     {
         $database   = $this->getDatabase();
@@ -36,6 +50,10 @@ class Mapper implements MapperInterface
         return $database->$collection;
     }
 
+    /**
+     * @param \MongoId $id
+     * @return DocumentInterface
+     */
     public function get($id)
     {
         if (!($id instanceof \MongoId)) $id = new \MongoId($id);
@@ -43,14 +61,17 @@ class Mapper implements MapperInterface
         return $this->findOne(['_id' => $id]);
     }
 
+    /**
+     * @return Cursor
+     */
     public function all()
     {
         return $this->find();
     }
 
     /**
-     * @todo
      * @param array $query
+     * @return Cursor
      */
     public function find(array $query = [])
     {
@@ -60,38 +81,42 @@ class Mapper implements MapperInterface
     }
 
     /**
-     * @todo
      * @param array $query
      */
     public function findOne(array $query = [])
     {
         $result = $this->getCollection()->findOne($query);
 
-        return
-            $result
-                ? $this->build($result)
-                : null;
+        return $result ? $this->build($result, false) : null;
     }
 
     /**
-     * @todo
-     * @param $id
+     * @param \MongoId $id
      */
     public function delete($id)
+    {
+        if (!($id instanceof \MongoId)) $id = new \MongoId($id);
+
+        return $this->remove(['_id' => $id]);
+    }
+
+    public function remove(array $query = [])
     {
 
     }
 
     /**
-     * @todo
-     * @param DocumentInterface $document
+     * @param $document
+     * @return $this
+     * @throws \InvalidArgumentException
+     * @throws \Exception
      */
-    public function save($document)
+    public function save(&$document)
     {
         if (is_array($document)) $document = $this->build($document);
         if (!($document instanceof DocumentInterface)) throw new \InvalidArgumentException();
 
-        $result = $this->getCollection()->save($document->getData());
+        $result = $this->getCollection()->save($document->getMongoData());
 
         if (
             $result['ok'] != 1
@@ -99,6 +124,8 @@ class Mapper implements MapperInterface
         ) {
             throw new \Exception($result['errmsg']);
         }
+
+        $document->setNew(false);
 
         return true;
     }
