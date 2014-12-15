@@ -12,6 +12,13 @@ class Document extends Entity implements DocumentInterface
     /** @var  string */
     protected static $collection;
 
+    /**
+     * Mapper class
+     *
+     * @var string
+     */
+    protected static $mapper = "Echidna\\Mapper";
+
     public function setNew($new)
     {
         $this->new = $new === true;
@@ -33,7 +40,7 @@ class Document extends Entity implements DocumentInterface
      */
     protected function getType($type)
     {
-        return Type::factory($type);
+        return Echidna::type($type);
     }
 
     /**
@@ -58,6 +65,13 @@ class Document extends Entity implements DocumentInterface
     public function toArray()
     {
         return $this->getData();
+    }
+
+    public static function mapper()
+    {
+        if (!(class_implements(static::$mapper, "Echidna\\MapperInterface"))) static::$mapper = "Echidna\\Mapper";
+
+        return static::$mapper;
     }
 
     public static function collection($collection = null)

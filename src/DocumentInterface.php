@@ -14,6 +14,8 @@ interface DocumentInterface extends EntityInterface
 
     public function toArray();
 
+    public static function mapper();
+
     public static function collection($collection = null);
 
     public static function fields();

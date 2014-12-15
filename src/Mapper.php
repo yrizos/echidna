@@ -100,9 +100,23 @@ class Mapper implements MapperInterface
         return $this->remove(['_id' => $id]);
     }
 
+    /**
+     * @param array $query
+     * @return bool
+     * @throws \Exception
+     */
     public function remove(array $query = [])
     {
+        $result = $this->getCollection()->remove($query);
 
+        if (
+            $result['ok'] != 1
+            || !empty($result['err'])
+        ) {
+            throw new \Exception($result['errmsg']);
+        }
+
+        return true;
     }
 
     /**

@@ -41,27 +41,9 @@ trait DocumentBuilderTrait
      */
     public function build(array $data = [], $isNew = true)
     {
-        return self::buildDocument($this->getDocument(), $data, $isNew);
+        return Echidna::document($this->getDocument(), $data, $isNew);
     }
 
-    /**
-     * @param $document
-     * @param array $data
-     * @param bool $isNew
-     * @return mixed
-     * @throws \InvalidArgumentException
-     */
-    public static function buildDocument($document, array $data = [], $isNew = true)
-    {
-        if (!($document instanceof DocumentInterface)) {
-            if (!class_exists($document) || !in_array("Echidna\\DocumentInterface", class_implements($document))) throw new \InvalidArgumentException();
 
-            $document = new $document;
-        }
-
-        $document->setData($data)->setNew($isNew);
-
-        return $document;
-    }
 
 } 

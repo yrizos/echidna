@@ -7,6 +7,7 @@ use Echidna\Document;
 class TestDocument extends Document
 {
     protected static $collection = 'test';
+    protected static $mapper = "EchidnaTest\\Document\\TestMapper";
 
     public static function fields()
     {

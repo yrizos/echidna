@@ -126,5 +126,47 @@ class MapperTest extends Base
         foreach ($result as $key => $value) {
             $this->assertEquals('username' . $key, $value['username']);
         }
+
+        $this->mapper->getCollection()->drop();
+    }
+
+    public function testDelete()
+    {
+        $document = $this->mapper->build(['email' => 'username@example.com']);
+        $this->mapper->save($document);
+
+        $id       = $document['_id'];
+        $document = $this->mapper->get($id);
+
+        $this->assertInstanceOf("Echidna\\DocumentInterface", $document);
+        $this->assertEquals($id, $document['_id']);
+
+        $result   = $this->mapper->delete($id);
+        $document = $this->mapper->get($id);
+
+        $this->assertTrue($result);
+        $this->assertNull($document);
+
+        $this->mapper->getCollection()->drop();
+    }
+
+    public function testRemove()
+    {
+        $document = $this->mapper->build(['email' => 'username@example.com']);
+        $this->mapper->save($document);
+
+        $id       = $document['_id'];
+        $document = $this->mapper->get($id);
+
+        $this->assertInstanceOf("Echidna\\DocumentInterface", $document);
+        $this->assertEquals($id, $document['_id']);
+
+        $result   = $this->mapper->remove(['email' => 'username@example.com']);
+        $document = $this->mapper->get($id);
+
+        $this->assertTrue($result);
+        $this->assertNull($document);
+
+        $this->mapper->getCollection()->drop();
     }
 }
