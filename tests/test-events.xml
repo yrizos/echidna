@@ -1,0 +1,13 @@
+<phpunit bootstrap="./autoload.php">
+    <testsuites>
+        <testsuite name="document-type">
+            <file>./src/EventTest.php</file>
+        </testsuite>
+    </testsuites>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">./../src</directory>
+        </whitelist>
+    </filter>
+</phpunit>

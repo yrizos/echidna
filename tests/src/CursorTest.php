@@ -3,6 +3,7 @@
 namespace EchidnaTest;
 
 use Echidna\Cursor;
+use Echidna\Echidna;
 
 class CursorTest extends Base
 {
@@ -25,11 +26,10 @@ class CursorTest extends Base
             ['username' => 'username3'],
         ]]);
 
-        $cursor = new Cursor($mongo_cursor, "EchidnaTest\\Document\\UserDocument");
+        $mapper = Echidna::mapper($this->database, "EchidnaTest\\Document\\UserDocument");
+        $cursor = new Cursor($mongo_cursor, $mapper);
 
         $this->assertSame($mongo_cursor, $cursor->getCursor());
-        $this->assertSame("EchidnaTest\\Document\\UserDocument", $cursor->getDocument());
-        $this->assertInstanceOf("EchidnaTest\\Document\\UserDocument", $cursor->build([]));
         $this->assertSame(2, count($cursor));
     }
 
@@ -40,7 +40,8 @@ class CursorTest extends Base
             ['username' => 'username3'],
         ]]);
 
-        $cursor = new Cursor($mongo_cursor, "EchidnaTest\\Document\\UserDocument");
+        $mapper = Echidna::mapper($this->database, "EchidnaTest\\Document\\UserDocument");
+        $cursor = new Cursor($mongo_cursor, $mapper);
 
         foreach ($cursor as $document) {
             $this->assertInstanceOf("EchidnaTest\\Document\\UserDocument", $document);

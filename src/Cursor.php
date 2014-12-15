@@ -4,15 +4,16 @@ namespace Echidna;
 
 class Cursor implements CursorInterface
 {
-
-    use DocumentBuilderTrait;
-
     /** @var \MongoCursor */
     private $cursor;
 
-    public function __construct(\MongoCursor $cursor, $document)
+    /** @var MapperInterface */
+    private $mapper;
+
+    public function __construct(\MongoCursor $cursor, MapperInterface $mapper = null)
     {
-        $this->setCursor($cursor)->setDocument($document);
+        $this->setCursor($cursor);
+        if ($mapper !== null) $this->setMapper($mapper);
     }
 
     private function setCursor(\MongoCursor $cursor)
@@ -27,18 +28,36 @@ class Cursor implements CursorInterface
         return $this->cursor;
     }
 
+    private function setMapper(MapperInterface $mapper)
+    {
+        $this->mapper = $mapper;
+
+        return $this;
+    }
+
+    public function getMapper()
+    {
+        return $this->mapper;
+    }
+
     public function current()
     {
         $result = $this->cursor->current();
+        $mapper = $this->getMapper();
 
-        return $result ? $this->build($result, false) : null;
+        if ($mapper && $result) $result = $mapper->build($result, false, ['after_get']);
+
+        return $result ? $result : null;
     }
 
     public function next()
     {
         $result = $this->cursor->next();
+        $mapper = $this->getMapper();
 
-        return $result ? $this->build($result, false) : null;
+        if ($mapper && $result) $result = $mapper->build($result, false, ['after_get']);
+
+        return $result ? $result : null;
     }
 
     public function key()

@@ -16,7 +16,9 @@ interface DocumentInterface extends EntityInterface
 
     public static function mapper();
 
-    public static function collection($collection = null);
+    public static function collection();
 
     public static function fields();
+
+    public static function events(EventEmitterInterface $eventEmmiter);
 }

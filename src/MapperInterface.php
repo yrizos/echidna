@@ -2,7 +2,7 @@
 
 namespace Echidna;
 
-interface MapperInterface extends DocumentBuilderInterface
+interface MapperInterface
 {
 
     public function __construct(\MongoDB $database, $entity);
@@ -10,6 +10,8 @@ interface MapperInterface extends DocumentBuilderInterface
     public function getDatabase();
 
     public function getCollection();
+
+    public function getDocument();
 
     public function get($id);
 
@@ -23,4 +25,7 @@ interface MapperInterface extends DocumentBuilderInterface
 
     public function save(&$document);
 
+    public function build(array $data = [], $isNew = true, array $events = []);
+
+    public function eventEmitter();
 }

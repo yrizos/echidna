@@ -10,7 +10,7 @@ class Document extends Entity implements DocumentInterface
     private $new = true;
 
     /** @var  string */
-    protected static $collection;
+    protected static $collection = "echidna_document";
 
     /**
      * Mapper class
@@ -74,10 +74,8 @@ class Document extends Entity implements DocumentInterface
         return static::$mapper;
     }
 
-    public static function collection($collection = null)
+    public static function collection()
     {
-        if (null !== $collection) static::$collection = $collection;
-
         return static::$collection;
     }
 
@@ -88,6 +86,11 @@ class Document extends Entity implements DocumentInterface
             'date_create' => ['type' => 'date', 'default' => new \DateTime()],
             'date_update' => ['type' => 'date', 'default' => null],
         ];
+    }
+
+    public static function events(EventEmitterInterface $eventEmitter)
+    {
+
     }
 
 } 

@@ -4,7 +4,6 @@ namespace Echidna;
 
 class Echidna
 {
-
     /**
      * @param $document
      * @param array $data
