@@ -13,6 +13,10 @@ interface MapperInterface
 
     public function getDocument();
 
+    public function getEventEmitter();
+
+    public function emit(DocumentInterface $document, array $events = []);
+
     public function get($id);
 
     public function all();
@@ -26,6 +30,4 @@ interface MapperInterface
     public function save(&$document);
 
     public function build(array $data = [], $isNew = true, array $events = []);
-
-    public function eventEmitter();
 }

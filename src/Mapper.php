@@ -83,6 +83,29 @@ class Mapper implements MapperInterface
     }
 
     /**
+     * @return EventEmitter
+     */
+    public function getEventEmitter()
+    {
+        $document = $this->getDocument();
+        if (empty(self::$eventEmitter[$document])) self::$eventEmitter[$document] = new EventEmitter();
+
+        return self::$eventEmitter[$document];
+    }
+
+    /**
+     * @param DocumentInterface $document
+     * @param array $events
+     * @return $this
+     */
+    public function emit(DocumentInterface $document, array $events = [])
+    {
+        foreach ($events as $event) $this->getEventEmitter()->emit($event, [$document, $this]);
+
+        return $this;
+    }
+
+    /**
      * @param \MongoId $id
      * @return DocumentInterface
      */
@@ -117,14 +140,15 @@ class Mapper implements MapperInterface
      */
     public function findOne(array $query = [])
     {
-        $result = $this->getCollection()->findOne($query);
+        $document = $this->getCollection()->findOne($query);
 
-        if ($result) {
-            $result = $this->build($result, false);
-            $this->eventEmitter()->emit('after_get', [$result, $this]);
+        if ($document) {
+            $document = $this->build($document, false);
+
+            $this->emit($document, ['after_get']);
         }
 
-        return $result ? $result : null;
+        return $document ? $document : null;
     }
 
     /**
@@ -165,14 +189,14 @@ class Mapper implements MapperInterface
     public function save(&$document)
     {
         if ($document instanceof DocumentInterface) {
-            $document::events($this->eventEmitter());
+            $document::events($this->getEventEmitter());
         } else if (is_array($document)) {
             $document = $this->build($document);
         }
 
         if (!($document instanceof DocumentInterface)) throw new \InvalidArgumentException('Document is invalid.');
 
-        $this->eventEmitter()->emit('before_save', [$document, $this]);
+        $this->emit($document, ['before_save']);
 
         $result = $this->getCollection()->save($document->getMongoData());
 
@@ -183,7 +207,7 @@ class Mapper implements MapperInterface
             throw new \Exception($result['errmsg']);
         }
 
-        $this->eventEmitter()->emit('after_save', [$document, $this]);
+        $this->emit($document, ['after_save']);
 
         $document->setNew(false);
 
@@ -199,21 +223,12 @@ class Mapper implements MapperInterface
     public function build(array $data = [], $isNew = true, array $events = [])
     {
         $document = Echidna::document($this->getDocument(), $data, $isNew);
-        $document::events($this->eventEmitter());
+        $document::events($this->getEventEmitter());
 
-        foreach ($events as $event) $this->eventEmitter()->emit($event, [$document, $this]);
+        $this->emit($document, $events);
 
         return $document;
     }
 
-    /**
-     * @return EventEmitter
-     */
-    public function eventEmitter()
-    {
-        $document = $this->getDocument();
-        if (empty(self::$eventEmitter[$document])) self::$eventEmitter[$document] = new EventEmitter();
 
-        return self::$eventEmitter[$document];
-    }
 } 
