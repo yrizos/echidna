@@ -189,6 +189,7 @@ class Mapper implements MapperInterface
     public function save(&$document)
     {
         if ($document instanceof DocumentInterface) {
+            $document->setBuilder($this);
             $document::events($this->getEventEmitter());
         } else if (is_array($document)) {
             $document = $this->build($document);
@@ -223,8 +224,9 @@ class Mapper implements MapperInterface
     public function build(array $data = [], $isNew = true, array $events = [])
     {
         $document = Echidna::document($this->getDocument(), $data, $isNew);
-        $document::events($this->getEventEmitter());
+        $document->setBuilder($this);
 
+        $document::events($this->getEventEmitter());
         $this->emit($document, $events);
 
         return $document;

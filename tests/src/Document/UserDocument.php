@@ -12,10 +12,18 @@ class UserDocument extends Document
     {
         $fields = parent::fields();
 
+        $fields['city_id'] = ['type' => 'id', 'default' => null];
         $fields['username'] = ['type' => 'string'];
         $fields['password'] = ['type' => 'string'];
         $fields['email']    = ['type' => 'email'];
 
         return $fields;
+    }
+
+    public static function references()
+    {
+        return [
+            'city' => ['field' => 'city_id', 'document' => "EchidnaTest\\Document\\CityDocument"]
+        ];
     }
 } 
