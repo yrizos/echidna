@@ -6,13 +6,16 @@ use DataObject\Entity;
 
 class Document extends Entity implements DocumentInterface
 {
+
+    use MapperTrait;
+
     /** @var  string */
     protected static $collection = "echidna_document";
 
     private $new = true;
 
     /** @var array */
-    private $references = null;
+    private $refs = null;
 
     /** @var MapperInterface */
     private $builder = null;
@@ -22,48 +25,20 @@ class Document extends Entity implements DocumentInterface
      *
      * @var string
      */
-    protected static $mapper = "Echidna\\Mapper";
-
-    public function setBuilder(MapperInterface $buidler)
-    {
-        $this->builder = $buidler;
-
-        return $this;
-    }
-
-    public function getBuilder()
-    {
-        return $this->builder;
-    }
+    protected static $mapper_class = "Echidna\\Mapper";
 
     public function getReferences()
     {
-        if (null === $this->references) {
+        if (null === $this->refs) {
             $definition = is_array(static::references()) ? static::references() : [];
 
             foreach ($definition as $offset => $value) {
-                $offset = trim(strval($offset));
-                if (empty($offset)) continue;
-
-                $field    = isset($value['field']) ? trim(strval($value['field'])) : null;
-                $document = isset($value['document']) ? $value['document'] : null;
-
-                if (
-                    !$field
-                    || !$document
-                    || !$this->getField($field)
-                    || !class_exists($document)
-                    || !in_array("Echidna\\DocumentInterface", class_implements($document))
-                ) continue;
-
-                $this->references[$offset] = [
-                    'field'    => $field,
-                    'document' => $document,
-                ];
+                $offset              = trim(strval($offset));
+                $this->refs[$offset] = Echidna::reference($this, $offset, $value);
             }
         }
 
-        return $this->references;
+        return $this->refs;
     }
 
     public function offsetGet($offset)
@@ -71,12 +46,12 @@ class Document extends Entity implements DocumentInterface
         $value = parent::offsetGet($offset);
         if ($value) return $value;
 
-        $builder = $this->getBuilder();
-        $ref     = @$this->getReferences()[$offset];
-        $id      = $ref ? $this[$ref['field']] : null;
+        $mapper = $this->getMapper();
+        $ref    = @$this->getReferences()[$offset];
+        $id     = $ref ? $this[$ref['field']] : null;
 
-        if ($id && $builder) {
-            $mapper = Echidna::mapper($builder->getDatabase(), $ref['document']);
+        if ($id && $mapper) {
+            $mapper = Echidna::mapper($mapper->getDatabase(), $ref['document']);
 
             try {
                 $value = $mapper->get($id);
@@ -143,9 +118,9 @@ class Document extends Entity implements DocumentInterface
 
     public static function mapper()
     {
-        if (!(class_implements(static::$mapper, "Echidna\\MapperInterface"))) static::$mapper = "Echidna\\Mapper";
+        if (!(class_implements(static::$mapper_class, "Echidna\\MapperInterface"))) static::$mapper_class = "Echidna\\Mapper";
 
-        return static::$mapper;
+        return static::$mapper_class;
     }
 
     public static function collection()

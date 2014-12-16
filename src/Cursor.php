@@ -2,13 +2,14 @@
 
 namespace Echidna;
 
+use Echidna\Type\IdType;
+
 class Cursor implements CursorInterface
 {
+    use MapperTrait;
+
     /** @var \MongoCursor */
     private $cursor;
-
-    /** @var MapperInterface */
-    private $mapper;
 
     public function __construct(\MongoCursor $cursor, MapperInterface $mapper = null)
     {
@@ -16,7 +17,7 @@ class Cursor implements CursorInterface
         if ($mapper !== null) $this->setMapper($mapper);
     }
 
-    private function setCursor(\MongoCursor $cursor)
+    public function setCursor(\MongoCursor $cursor)
     {
         $this->cursor = $cursor;
 
@@ -26,18 +27,6 @@ class Cursor implements CursorInterface
     public function getCursor()
     {
         return $this->cursor;
-    }
-
-    private function setMapper(MapperInterface $mapper)
-    {
-        $this->mapper = $mapper;
-
-        return $this;
-    }
-
-    public function getMapper()
-    {
-        return $this->mapper;
     }
 
     public function current()
@@ -97,4 +86,58 @@ class Cursor implements CursorInterface
 
         return $data;
     }
-} 
+
+    public function with($refs)
+    {
+        $mapper = $this->getMapper();
+        if (empty($mapper)) return $this;
+
+        $refs = $this->resolveReferences($refs);
+        if (empty($refs)) return $this;
+
+        $data = $this->getData();
+        if (empty($data)) return $this;
+
+        $type = new IdType();
+        foreach ($refs as $offset => $ref) {
+            $detail_field = $ref['field'];
+            $lookup_ids   = [];
+            foreach ($data as $value) {
+                $detail_id = isset($value[$detail_field]) && $type->validate($value[$detail_field]) ? $type->filterMongo($value[$detail_field]) : null;
+                if ($detail_id) $lookup_ids[] = $detail_id;
+            }
+
+            if (empty($lookup_ids)) continue;
+
+            $detail_mapper = Echidna::mapper($this->getMapper()->getDatabase(), $ref['document']);
+            $detail_result = $detail_mapper->find(['_id' => ['$in' => $lookup_ids]]);
+            $detail_result = $detail_result->getData();
+
+            foreach ($data as $key => $value) {
+                $detail_id    = isset($value[$detail_field]) && $type->validate($value[$detail_field]) ? $type->filter($value[$detail_field]) : null;
+                $detail_value = isset($detail_result[$detail_id]) ? $detail_result[$detail_id] : null;
+
+                $data[$key][$offset] = $detail_value;
+            }
+        }
+
+        return $data;
+    }
+
+    private function resolveReferences($refs)
+    {
+        $mapper = $this->getMapper();
+        if (!$mapper) return [];
+
+        $document = $mapper->getDocument();
+        $refs     = is_array($refs) ? $refs : [$refs];
+        $result   = [];
+
+        foreach ($refs as $key => $offset) {
+            $ref = Echidna::reference($document, $offset);
+            if ($ref) $result[$offset] = $ref;
+        }
+
+        return $result;
+    }
+}

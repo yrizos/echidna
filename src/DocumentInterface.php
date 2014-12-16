@@ -4,13 +4,8 @@ namespace Echidna;
 
 use DataObject\EntityInterface;
 
-interface DocumentInterface extends EntityInterface
+interface DocumentInterface extends EntityInterface, ResultInterface
 {
-
-    public function setBuilder(MapperInterface $buidler);
-
-    public function getBuilder();
-
     public function getReferences();
 
     public function setNew($new);
@@ -18,8 +13,6 @@ interface DocumentInterface extends EntityInterface
     public function isNew();
 
     public function getMongoData();
-
-    public function toArray();
 
     public static function mapper();
 

@@ -12,10 +12,11 @@ class UserDocument extends Document
     {
         $fields = parent::fields();
 
-        $fields['city_id'] = ['type' => 'id', 'default' => null];
-        $fields['username'] = ['type' => 'string'];
-        $fields['password'] = ['type' => 'string'];
-        $fields['email']    = ['type' => 'email'];
+        $fields['city_id']       = ['type' => 'id', 'default' => null];
+        $fields['department_id'] = ['type' => 'id', 'default' => null];
+        $fields['username']      = ['type' => 'string'];
+        $fields['password']      = ['type' => 'string'];
+        $fields['email']         = ['type' => 'email'];
 
         return $fields;
     }
@@ -23,7 +24,8 @@ class UserDocument extends Document
     public static function references()
     {
         return [
-            'city' => ['field' => 'city_id', 'document' => "EchidnaTest\\Document\\CityDocument"]
+            'city'       => ['field' => 'city_id', 'document' => "EchidnaTest\\Document\\CityDocument"],
+            'department' => ['field' => 'department_id', 'document' => "EchidnaTest\\Document\\DepartmentDocument"],
         ];
     }
 } 

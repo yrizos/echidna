@@ -2,17 +2,17 @@
 
 namespace Echidna;
 
-interface CursorInterface extends \Iterator, \Countable
+interface CursorInterface extends \Iterator, \Countable, ResultInterface
 {
 
     public function __construct(\MongoCursor $cursor, MapperInterface $mapper = null);
 
-    public function getCursor();
+    public function setCursor(\MongoCursor $cursor);
 
-    public function getMapper();
+    public function getCursor();
 
     public function getData();
 
-    public function toArray();
+    public function with($refs);
 
 }
