@@ -28,6 +28,4 @@ interface MapperInterface
     public function delete($id);
 
     public function save(&$document);
-
-    public function build(array $data = [], $isNew = true, array $events = []);
 }

@@ -44,17 +44,17 @@ class Document extends Entity implements DocumentInterface
     public function offsetGet($offset)
     {
         $value = parent::offsetGet($offset);
+
         if ($value) return $value;
 
         $mapper = $this->getMapper();
-        $ref    = @$this->getReferences()[$offset];
-        $id     = $ref ? $this[$ref['field']] : null;
+        $ref    = Echidna::buildReference($this, $offset);
 
-        if ($id && $mapper) {
-            $mapper = Echidna::mapper($mapper->getDatabase(), $ref['document']);
+        if ($ref['field'] && $ref['document'] && $mapper) {
+            $mapper = Echidna::buildMapper($mapper->getDatabase(), $ref['document']);
 
             try {
-                $value = $mapper->get($id);
+                $value = $mapper->get($this[$ref['field']]);
             } catch (\Exception $e) {
                 $value = null;
             }
@@ -85,11 +85,12 @@ class Document extends Entity implements DocumentInterface
 
     /**
      * @param $type
+     *
      * @return TypeInterface
      */
     protected function getType($type)
     {
-        return Echidna::type($type);
+        return Echidna::buildType($type);
     }
 
     /**
@@ -113,7 +114,7 @@ class Document extends Entity implements DocumentInterface
 
     public function toArray()
     {
-        return $this->getData();
+        return parent::getData();
     }
 
     public static function mapper()

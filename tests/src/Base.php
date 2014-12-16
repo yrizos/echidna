@@ -12,7 +12,7 @@ class Base extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $connection     = new \MongoClient();
+        $connection     = new \MongoClient('mongodb://localhost:27017', ['connect' => true, 'connectTimeoutMS' => -1, 'journal' => true]);
         $this->database = $connection->selectDB('echidna_test');
 
         $this->database->drop();

@@ -16,8 +16,8 @@ class ReferencesTest extends Base
         parent::setUp();
 
         for ($i = 0; $i < 5; $i++) {
-            $mapper = Echidna::mapper($this->database, "EchidnaTest\\Document\\CityDocument");
-            $city   = Echidna::document("EchidnaTest\\Document\\CityDocument", ['name' => 'city' . $i]);
+            $mapper = Echidna::buildMapper($this->database, "EchidnaTest\\Document\\CityDocument");
+            $city   = Echidna::buildDocument("EchidnaTest\\Document\\CityDocument", ['name' => 'city' . $i]);
 
             $mapper->save($city);
 
@@ -25,8 +25,8 @@ class ReferencesTest extends Base
         }
 
         for ($i = 0; $i < 5; $i++) {
-            $mapper     = Echidna::mapper($this->database, "EchidnaTest\\Document\\DepartmentDocument");
-            $department = Echidna::document("EchidnaTest\\Document\\DepartmentDocument", ['name' => 'department' . $i]);
+            $mapper     = Echidna::buildMapper($this->database, "EchidnaTest\\Document\\DepartmentDocument");
+            $department = Echidna::buildDocument("EchidnaTest\\Document\\DepartmentDocument", ['name' => 'department' . $i]);
 
             $mapper->save($department);
 
@@ -34,8 +34,8 @@ class ReferencesTest extends Base
         }
 
         for ($i = 0; $i < 5; $i++) {
-            $mapper = Echidna::mapper($this->database, "EchidnaTest\\Document\\UserDocument");
-            $user   = Echidna::document(
+            $mapper = Echidna::buildMapper($this->database, "EchidnaTest\\Document\\UserDocument");
+            $user   = Echidna::buildDocument(
                              "EchidnaTest\\Document\\UserDocument", [
                                  'username'      => 'username' . $i,
                                  'password'      => 'password' . $i,
@@ -70,7 +70,7 @@ class ReferencesTest extends Base
 
     public function testEagerLoading()
     {
-        $mapper = Echidna::mapper($this->database, "EchidnaTest\\Document\\UserDocument");
+        $mapper = Echidna::buildMapper($this->database, "EchidnaTest\\Document\\UserDocument");
         $users  = $mapper->all()->with(['city', 'department']);
 
         foreach ($users as $user) {

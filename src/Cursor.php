@@ -6,6 +6,7 @@ use Echidna\Type\IdType;
 
 class Cursor implements CursorInterface
 {
+
     use MapperTrait;
 
     /** @var \MongoCursor */
@@ -14,6 +15,7 @@ class Cursor implements CursorInterface
     public function __construct(\MongoCursor $cursor, MapperInterface $mapper = null)
     {
         $this->setCursor($cursor);
+
         if ($mapper !== null) $this->setMapper($mapper);
     }
 
@@ -31,22 +33,26 @@ class Cursor implements CursorInterface
 
     public function current()
     {
-        $result = $this->cursor->current();
+        $result = $this->getCursor()->current();
         $mapper = $this->getMapper();
 
-        if ($mapper && $result) $result = $mapper->build($result, false, ['after_get']);
+        if ($mapper && $result) {
+            return Echidna::buildDocument($mapper->getDocument(), $result, false, $mapper, ['after_get']);
+        }
 
-        return $result ? $result : null;
+        return null;
     }
 
     public function next()
     {
-        $result = $this->cursor->next();
+        $result = $this->getCursor()->next();
         $mapper = $this->getMapper();
 
-        if ($mapper && $result) $result = $mapper->build($result, false, ['after_get']);
+        if ($mapper && $result) {
+            return Echidna::buildDocument($mapper->getDocument(), $result, false, $mapper, ['after_get']);
+        }
 
-        return $result ? $result : null;
+        return null;
     }
 
     public function key()
@@ -77,11 +83,10 @@ class Cursor implements CursorInterface
     public function toArray()
     {
         $data = $this->getData();
-
         foreach ($data as $key => $value) {
-            if ($value instanceof DocumentInterface) $value = $value->getData();
-
-            $data[$key] = $value;
+            if ($value instanceof DocumentInterface) {
+                $data[$key] = $value->toArray();
+            }
         }
 
         return $data;
@@ -109,7 +114,7 @@ class Cursor implements CursorInterface
 
             if (empty($lookup_ids)) continue;
 
-            $detail_mapper = Echidna::mapper($this->getMapper()->getDatabase(), $ref['document']);
+            $detail_mapper = Echidna::buildMapper($this->getMapper()->getDatabase(), $ref['document']);
             $detail_result = $detail_mapper->find(['_id' => ['$in' => $lookup_ids]]);
             $detail_result = $detail_result->getData();
 
@@ -133,9 +138,9 @@ class Cursor implements CursorInterface
         $refs     = is_array($refs) ? $refs : [$refs];
         $result   = [];
 
-        foreach ($refs as $key => $offset) {
-            $ref = Echidna::reference($document, $offset);
-            if ($ref) $result[$offset] = $ref;
+        foreach ($refs as $offset) {
+            $ref = Echidna::buildReference($document, $offset);
+            if ($ref['field']) $result[$offset] = $ref;
         }
 
         return $result;

@@ -9,8 +9,8 @@ class EventTest extends Base
 
     public function testSave()
     {
-        $mapper   = Echidna::mapper($this->database, "EchidnaTest\\Document\\EventfulDocument");
-        $document = Echidna::document("EchidnaTest\\Document\\EventfulDocument");
+        $mapper   = Echidna::buildMapper($this->database, "EchidnaTest\\Document\\EventfulDocument");
+        $document = Echidna::buildDocument("EchidnaTest\\Document\\EventfulDocument");
 
         $this->assertEquals('no', $document['before_save']);
         $this->assertEquals('no', $document['after_save']);
@@ -25,8 +25,8 @@ class EventTest extends Base
 
     public function testAfterGet()
     {
-        $mapper   = Echidna::mapper($this->database, "EchidnaTest\\Document\\EventfulDocument");
-        $document = Echidna::document("EchidnaTest\\Document\\EventfulDocument");
+        $mapper   = Echidna::buildMapper($this->database, "EchidnaTest\\Document\\EventfulDocument");
+        $document = Echidna::buildDocument("EchidnaTest\\Document\\EventfulDocument");
 
         $mapper->save($document);
 
@@ -41,8 +41,8 @@ class EventTest extends Base
 
     public function testAfterGetToArray()
     {
-        $mapper   = Echidna::mapper($this->database, "EchidnaTest\\Document\\EventfulDocument");
-        $document = Echidna::document("EchidnaTest\\Document\\EventfulDocument");
+        $mapper   = Echidna::buildMapper($this->database, "EchidnaTest\\Document\\EventfulDocument");
+        $document = Echidna::buildDocument("EchidnaTest\\Document\\EventfulDocument");
 
         $mapper->save($document);
 
@@ -58,10 +58,11 @@ class EventTest extends Base
 
     public function testCursorAfterGet()
     {
-        $mapper = Echidna::mapper($this->database, "EchidnaTest\\Document\\EventfulDocument");
+        $mapper = Echidna::buildMapper($this->database, "EchidnaTest\\Document\\EventfulDocument");
 
-        for ($i = 0; $i < 5; $i++) {
-            $document = $mapper->build(['index' => $i]);
+        for ($i = 0; $i < 3; $i++) {
+            $document = Echidna::buildDocument($mapper->getDocument(), ['index' => $i]);
+
             $mapper->save($document);
 
             $this->assertEquals('no', $document['after_get']);
@@ -78,10 +79,11 @@ class EventTest extends Base
 
     public function testCursorToArrayAfterGet()
     {
-        $mapper = Echidna::mapper($this->database, "EchidnaTest\\Document\\EventfulDocument");
+        $mapper = Echidna::buildMapper($this->database, "EchidnaTest\\Document\\EventfulDocument");
 
-        for ($i = 0; $i < 5; $i++) {
-            $document = $mapper->build(['index' => $i]);
+        for ($i = 0; $i < 3; $i++) {
+            $document = Echidna::buildDocument($mapper->getDocument(), ['index' => $i]);
+
             $mapper->save($document);
 
             $this->assertEquals('no', $document['after_get']);

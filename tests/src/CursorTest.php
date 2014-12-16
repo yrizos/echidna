@@ -26,7 +26,7 @@ class CursorTest extends Base
             ['username' => 'username3'],
         ]]);
 
-        $mapper = Echidna::mapper($this->database, "EchidnaTest\\Document\\UserDocument");
+        $mapper = Echidna::buildMapper($this->database, "EchidnaTest\\Document\\UserDocument");
         $cursor = new Cursor($mongo_cursor, $mapper);
 
         $this->assertSame($mongo_cursor, $cursor->getCursor());
@@ -40,7 +40,7 @@ class CursorTest extends Base
             ['username' => 'username3'],
         ]]);
 
-        $mapper = Echidna::mapper($this->database, "EchidnaTest\\Document\\UserDocument");
+        $mapper = Echidna::buildMapper($this->database, "EchidnaTest\\Document\\UserDocument");
         $cursor = new Cursor($mongo_cursor, $mapper);
 
         foreach ($cursor as $document) {

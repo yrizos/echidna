@@ -2,11 +2,13 @@
 
 namespace EchidnaTest;
 
+use Echidna\Echidna;
 use Echidna\Mapper;
 use Echidna\MapperInterface;
 
 class MapperTest extends Base
 {
+
     /** @var  MapperInterface */
     protected $mapper;
 
@@ -35,7 +37,7 @@ class MapperTest extends Base
 
     public function testBuild()
     {
-        $document = $this->mapper->build(['name' => 'yannis']);
+        $document = Echidna::buildDocument($this->mapper->getDocument(), ['name' => 'yannis']);
 
         $this->assertInstanceOf("EchidnaTest\\Document\\UserDocument", $document);
         $this->assertEquals('yannis', $document['name']);
@@ -44,7 +46,8 @@ class MapperTest extends Base
     public function testSaveDocument()
     {
         foreach ($this->data as $value) {
-            $document = $this->mapper->build($value);
+
+            $document = Echidna::buildDocument($this->mapper->getDocument(), $value);
 
             $this->assertTrue($document->isNew());
 
@@ -92,7 +95,7 @@ class MapperTest extends Base
         foreach ($this->data as $value) {
             $this->mapper->save($value);
 
-            $ids[$value['username']] = (string) $value['_id'];
+            $ids[$value['username']] = (string)$value['_id'];
         }
 
         $result = $this->mapper->find(['$or' => [
@@ -132,7 +135,7 @@ class MapperTest extends Base
 
     public function testDelete()
     {
-        $document = $this->mapper->build(['email' => 'username@example.com']);
+        $document = Echidna::buildDocument($this->mapper->getDocument(), ['email' => 'username@example.com']);
         $this->mapper->save($document);
 
         $id       = $document['_id'];
@@ -152,7 +155,7 @@ class MapperTest extends Base
 
     public function testRemove()
     {
-        $document = $this->mapper->build(['email' => 'username@example.com']);
+        $document = Echidna::buildDocument($this->mapper->getDocument(), ['email' => 'username@example.com']);
         $this->mapper->save($document);
 
         $id       = $document['_id'];
