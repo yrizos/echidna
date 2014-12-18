@@ -2,37 +2,31 @@
 
 namespace Echidna;
 
+use Sabre\Event\EventEmitter;
+use Sabre\Event\EventEmitterInterface;
+
 class Mapper implements MapperInterface
 {
 
     /** @var string */
     private $document;
 
-    /** @var  \MongoDB */
+    /** @var \MongoDB */
     private $database;
+
+    /** @var \MongoCollection */
+    private $collection;
 
     /** @var array */
     private static $eventEmitter;
 
     /**
      * @param \MongoDB                 $database
-     * @param DocumentInterface|string $document
+     * @param string|DocumentInterface $document
      */
     public function __construct(\MongoDB $database, $document)
     {
         $this->setDatabase($database)->setDocument($document);
-    }
-
-    /**
-     * @param \MongoDB $database
-     *
-     * @return $this
-     */
-    private function setDatabase(\MongoDB $database)
-    {
-        $this->database = $database;
-
-        return $this;
     }
 
     /**
@@ -41,18 +35,36 @@ class Mapper implements MapperInterface
      * @return $this
      * @throws \InvalidArgumentException
      */
-    private function setDocument($document)
+    public function setDocument($document)
     {
-        if (
-            !class_exists($document)
-            || !in_array("Echidna\\DocumentInterface", class_implements($document))
-        ) throw new \InvalidArgumentException('Document is invalid.');
+        $document = Echidna::document_class($document);
+        if (null === $document) throw new \InvalidArgumentException('Document ' . $document . ' is invalid.');
 
         $collection = $document::collection();
+        if (!is_string($collection) || empty($collection)) throw new \InvalidArgumentException("Document collection doesn't exist.");
 
-        if (empty($collection)) throw new \InvalidArgumentException('Collection is invalid.');
+        $this->document   = $document;
+        $this->collection = $this->getDatabase()->$collection;
 
-        $this->document = $document;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    final public function getDocument()
+    {
+        return $this->document;
+    }
+
+    /**
+     * @param \MongoDB $database
+     *
+     * @return $this
+     */
+    public function setDatabase(\MongoDB $database)
+    {
+        $this->database = $database;
 
         return $this;
     }
@@ -60,7 +72,7 @@ class Mapper implements MapperInterface
     /**
      * @return \MongoDB
      */
-    public function getDatabase()
+    final public function getDatabase()
     {
         return $this->database;
     }
@@ -68,25 +80,13 @@ class Mapper implements MapperInterface
     /**
      * @return \MongoCollection
      */
-    public function getCollection()
+    final public function getCollection()
     {
-        $database   = $this->getDatabase();
-        $document   = $this->getDocument();
-        $collection = $document::collection();
-
-        return $database->$collection;
+        return $this->collection;
     }
 
     /**
-     * @return string
-     */
-    public function getDocument()
-    {
-        return $this->document;
-    }
-
-    /**
-     * @return EventEmitter
+     * @return EventEmitterInterface
      */
     public function getEventEmitter()
     {
@@ -110,6 +110,36 @@ class Mapper implements MapperInterface
     }
 
     /**
+     * @param string|array|DocumentInterface $document
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    public function save(&$document)
+    {
+        $data = null;
+
+        if (is_array($document)) {
+            $data     = $document;
+            $document = $this->getDocument();
+        }
+
+        $document = Echidna::document($document, $data, false, $this, ['before_save']);
+        $result   = $this->getCollection()->save($document->getFilteredData('mongo'));
+
+        if (
+            $result['ok'] != 1
+            || !empty($result['err'])
+        ) {
+            throw new \Exception($result['errmsg']);
+        }
+
+        $this->emit($document, ['after_save']);
+
+        return true;
+    }
+
+    /**
      * @param \MongoId $id
      *
      * @return DocumentInterface
@@ -122,7 +152,7 @@ class Mapper implements MapperInterface
     }
 
     /**
-     * @return Cursor
+     * @return CursorInterface
      */
     public function all()
     {
@@ -132,7 +162,7 @@ class Mapper implements MapperInterface
     /**
      * @param array $query
      *
-     * @return Cursor
+     * @return CursorInterface
      */
     public function find(array $query = [])
     {
@@ -148,11 +178,10 @@ class Mapper implements MapperInterface
     {
         $result = $this->getCollection()->findOne($query);
 
-        if ($result) {
-            return Echidna::buildDocument($this->getDocument(), $result, false, $this, ['after_get']);
-        }
-
-        return null;
+        return
+            $result
+                ? Echidna::document($this->getDocument(), $result, false, $this, ['after_get'])
+                : null;
     }
 
     /**
@@ -181,38 +210,6 @@ class Mapper implements MapperInterface
         ) {
             throw new \Exception($result['errmsg']);
         }
-
-        return true;
-    }
-
-    /**
-     * @param $document
-     *
-     * @return $this
-     * @throws \InvalidArgumentException
-     * @throws \Exception
-     */
-    public function save(&$document)
-    {
-        $data = null;
-
-        if (is_array($document)) {
-            $data     = $document;
-            $document = $this->getDocument();
-        }
-
-        $document = Echidna::buildDocument($document, $data, null, $this, ['before_save']);
-        $result   = $this->getCollection()->save($document->getMongoData());
-
-        if (
-            $result['ok'] != 1
-            || !empty($result['err'])
-        ) {
-            throw new \Exception($result['errmsg']);
-        }
-
-        $this->emit($document, ['after_save']);
-        $document->setNew(false);
 
         return true;
     }

@@ -13,6 +13,4 @@ interface CursorInterface extends \Iterator, \Countable, ResultInterface
 
     public function getData();
 
-    public function with($refs);
-
 }

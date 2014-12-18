@@ -2,20 +2,19 @@
 
 namespace EchidnaTest\Document;
 
-use Echidna\Document;
 use Echidna\DocumentInterface;
-use Echidna\EventEmitterInterface;
+use Sabre\Event\EventEmitterInterface;
 
-class EventfulDocument extends Document
+class EventfulDocument extends SimpleDocument
 {
 
     public static function fields()
     {
-        $fields                = parent::fields();
-        $fields['index']       = ['type' => 'string', 'default' => null];
-        $fields['before_save'] = ['type' => 'string', 'default' => 'no'];
-        $fields['after_save']  = ['type' => 'string', 'default' => 'no'];
-        $fields['after_get']   = ['type' => 'string', 'default' => 'no'];
+        $fields = parent::fields();
+
+        $fields['before_save'] = ['type' => 'bool', 'default' => false];
+        $fields['after_save']  = ['type' => 'bool', 'default' => false];
+        $fields['after_get']   = ['type' => 'bool', 'default' => false];
 
         return $fields;
     }
@@ -23,15 +22,16 @@ class EventfulDocument extends Document
     public static function events(EventEmitterInterface $eventEmitter)
     {
         $eventEmitter->on('before_save', function (DocumentInterface $document) {
-            $document->before_save = 'yes';
+            $document->before_save = true;
         });
 
         $eventEmitter->on('after_save', function (DocumentInterface $document) {
-            $document->after_save = 'yes';
+            $document->after_save = true;
         });
 
         $eventEmitter->on('after_get', function (DocumentInterface $document) {
-            $document->after_get = 'yes';
+            $document->after_get = true;
         });
     }
+
 } 

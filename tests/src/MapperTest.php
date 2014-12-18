@@ -1,175 +1,210 @@
 <?php
-
 namespace EchidnaTest;
 
 use Echidna\Echidna;
-use Echidna\Mapper;
-use Echidna\MapperInterface;
+use EchidnaTest\Document\EventfulDocument;
+use EchidnaTest\Document\ComplexDocument;
 
 class MapperTest extends Base
 {
 
-    /** @var  MapperInterface */
-    protected $mapper;
-
-    public function setUp()
+    public function testGetDatabase()
     {
-        parent::setUp();
+        $mapper = Echidna::mapper($this->database, "EchidnaTest\\Document\\SimpleDocument");
 
-        $this->mapper = new Mapper($this->database, "EchidnaTest\\Document\\UserDocument");
-        $this->mapper->getCollection()->drop();
+        $this->assertEquals($this->database, $mapper->getDatabase());
     }
 
-    public function testConstructor()
+    public function testGetCollection()
     {
-        $this->assertSame($this->database, $this->mapper->getDatabase());
-        $this->assertInstanceOf("MongoCollection", $this->mapper->getCollection());
-        $this->assertEquals("EchidnaTest\\Document\\UserDocument", $this->mapper->getDocument());
+        $mapper     = Echidna::mapper($this->database, "EchidnaTest\\Document\\SimpleDocument");
+        $collection = ComplexDocument::collection();
+        $collection = $this->database->$collection;
+
+        $this->assertInstanceOf("MongoCollection", $mapper->getCollection());
+        $this->assertEquals($collection, $mapper->getCollection());
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
-    public function testConstructorException()
+    public function testGetDocument()
     {
-        $this->mapper = new Mapper($this->database, 'wrong');
+        $mapper = Echidna::mapper($this->database, "EchidnaTest\\Document\\SimpleDocument");
+
+        $this->assertEquals("EchidnaTest\\Document\\SimpleDocument", $mapper->getDocument());
     }
 
-    public function testBuild()
+    public function testGetEventEmmiter()
     {
-        $document = Echidna::buildDocument($this->mapper->getDocument(), ['name' => 'yannis']);
+        $mapper = Echidna::mapper($this->database, "EchidnaTest\\Document\\SimpleDocument");
 
-        $this->assertInstanceOf("EchidnaTest\\Document\\UserDocument", $document);
-        $this->assertEquals('yannis', $document['name']);
+        $this->assertInstanceOf("Sabre\\Event\\EventEmitterInterface", $mapper->getEventEmitter());
     }
 
-    public function testSaveDocument()
+    public function testSave()
     {
-        foreach ($this->data as $value) {
+        $document = new EventfulDocument();
+        $mapper   = Echidna::mapper($this->database, $document);
 
-            $document = Echidna::buildDocument($this->mapper->getDocument(), $value);
+        $document['_id'] = new \MongoId();
 
-            $this->assertTrue($document->isNew());
+        $this->assertTrue($document->isNew());
+        $this->assertFalse($document['before_save']);
+        $this->assertFalse($document['after_save']);
+        $this->assertFalse($document['after_get']);
 
-            $save = $this->mapper->save($document);
+        $mapper->save($document);
 
-            $this->assertTrue($save);
-            $this->assertFalse($document->isNew());
-        }
+        $this->assertInstanceOf("Echidna\\DocumentInterface", $document);
+        $this->assertFalse($document->isNew());
+        $this->assertTrue($document['before_save']);
+        $this->assertTrue($document['after_save']);
+        $this->assertFalse($document['after_get']);
 
-        $this->mapper->getCollection()->drop();
+        $mapper->getCollection()->drop();
     }
 
-    public function testSaveArray()
+    public function testGet()
     {
-        foreach ($this->data as $value) {
-            $save = $this->mapper->save($value);
+        $document = new EventfulDocument();
+        $mapper   = Echidna::mapper($this->database, $document);
 
-            $this->assertTrue($save);
-            $this->assertInstanceOf("Echidna\\DocumentInterface", $value);
-            $this->assertFalse($value->isNew());
-        }
+        $id = new \MongoId();
 
-        $this->mapper->getCollection()->drop();
+        $document['_id']    = $id;
+        $document['string'] = 'value';
+
+        $this->assertTrue($document->isNew());
+        $this->assertFalse($document['after_get']);
+
+        $mapper->save($document);
+
+        unset($document);
+
+        $document = $mapper->get($id);
+
+        $this->assertInstanceOf("Echidna\\DocumentInterface", $document);
+        $this->assertEquals((string)$id, $document['_id']);
+        $this->assertFalse($document->isNew());
+        $this->assertTrue($document['after_get']);
+
+        $mapper->getCollection()->drop();
     }
 
     public function testFindOne()
     {
+        $mapper = Echidna::mapper($this->database, "EchidnaTest\\Document\\EventfulDocument");
+
         foreach ($this->data as $value) {
+            $value    = ['string' => $value];
+            $document = new EventfulDocument();
+            $document->setData($value);
 
-            $this->mapper->save($value);
-
-            $query    = ['username' => $value['username']];
-            $document = $this->mapper->findOne($query);
-
-            $this->assertInstanceOf("Echidna\\DocumentInterface", $document);
-            $this->assertEquals($value['username'], $document['username']);
+            $mapper->save($document);
         }
 
-        $this->mapper->getCollection()->drop();
+        foreach ($this->data as $value) {
+
+            $document = $mapper->findOne(['string' => $value]);
+
+            $this->assertInstanceOf("Echidna\\DocumentInterface", $document);
+            $this->assertEquals($value, $document['string']);
+            $this->assertTrue($document['after_get']);
+        }
+
+        $mapper->getCollection()->drop();
     }
 
     public function testFind()
     {
-        $ids = [];
+        $mapper = Echidna::mapper($this->database, "EchidnaTest\\Document\\EventfulDocument");
+        $ids    = [];
         foreach ($this->data as $value) {
-            $this->mapper->save($value);
+            $document = new EventfulDocument();
+            $document->setData(['string' => $value]);
 
-            $ids[$value['username']] = (string)$value['_id'];
+            $mapper->save($document);
+
+            if ($value === 'value 2' || $value === 'value 3') $ids[$document['_id']] = $value;
         }
 
-        $result = $this->mapper->find(['$or' => [
-            ['username' => 'username2'],
-            ['username' => 'username3'],
-        ]]);
-
-        $result = $result->toArray();
+        $result = $mapper->find(['$or' => [
+            ['string' => 'value 2'],
+            ['string' => 'value 3'],
+        ]])->toArray();
 
         $this->assertEquals(2, count($result));
-        $this->assertEquals('username2', $result[$ids['username2']]['username']);
-        $this->assertEquals('username3', $result[$ids['username3']]['username']);
 
-        $this->mapper->getCollection()->drop();
+        foreach ($ids as $id => $value) {
+            $this->assertEquals($value, $result[$id]['string']);
+            $this->assertTrue($result[$id]['after_get']);
+        }
+
+        $mapper->getCollection()->drop();
     }
+
 
     public function testAll()
     {
-        foreach ($this->data as $value) $this->mapper->save($value);
+        $mapper = Echidna::mapper($this->database, "EchidnaTest\\Document\\EventfulDocument");
 
-        $result = $this->mapper->all();
+        foreach ($this->data as $value) {
+            $document = ['string' => $value];
 
-        $this->assertInstanceOf("Echidna\\Cursor", $result);
-
-        $result = $result->toArray();
-
-        $this->assertEquals(count($this->data), count($result));
-
-        $result = array_values($result);
-
-        foreach ($result as $key => $value) {
-            $this->assertEquals('username' . $key, $value['username']);
+            $mapper->save($document);
         }
 
-        $this->mapper->getCollection()->drop();
+        $result = $mapper->all();
+
+        $this->assertInstanceOf("Echidna\\Cursor", $result);
+        $this->assertEquals(count($this->data), count($result));
+
+        foreach ($result as $value) {
+            $this->assertInstanceOf("Echidna\\DocumentInterface", $value);
+            $this->assertTrue($value['after_get']);
+        }
+
+        $mapper->getCollection()->drop();
     }
 
     public function testDelete()
     {
-        $document = Echidna::buildDocument($this->mapper->getDocument(), ['email' => 'username@example.com']);
-        $this->mapper->save($document);
+        $mapper             = Echidna::mapper($this->database, "EchidnaTest\\Document\\EventfulDocument");
+        $document           = new EventfulDocument();
+        $document['string'] = 'value';
+
+        $mapper->save($document);
 
         $id       = $document['_id'];
-        $document = $this->mapper->get($id);
+        $document = $mapper->get($id);
 
         $this->assertInstanceOf("Echidna\\DocumentInterface", $document);
         $this->assertEquals($id, $document['_id']);
 
-        $result   = $this->mapper->delete($id);
-        $document = $this->mapper->get($id);
+        $result   = $mapper->delete($id);
+        $document = $mapper->get($id);
 
         $this->assertTrue($result);
         $this->assertNull($document);
 
-        $this->mapper->getCollection()->drop();
+        $mapper->getCollection()->drop();
     }
-
-    public function testRemove()
-    {
-        $document = Echidna::buildDocument($this->mapper->getDocument(), ['email' => 'username@example.com']);
-        $this->mapper->save($document);
-
-        $id       = $document['_id'];
-        $document = $this->mapper->get($id);
-
-        $this->assertInstanceOf("Echidna\\DocumentInterface", $document);
-        $this->assertEquals($id, $document['_id']);
-
-        $result   = $this->mapper->remove(['email' => 'username@example.com']);
-        $document = $this->mapper->get($id);
-
-        $this->assertTrue($result);
-        $this->assertNull($document);
-
-        $this->mapper->getCollection()->drop();
-    }
-}
+//
+//    public function testRemove()
+//    {
+//        $document = Echidna::buildDocument($mapper->getDocument(), ['email' => 'username@example.com']);
+//        $mapper->save($document);
+//
+//        $id       = $document['_id'];
+//        $document = $mapper->get($id);
+//
+//        $this->assertInstanceOf("Echidna\\DocumentInterface", $document);
+//        $this->assertEquals($id, $document['_id']);
+//
+//        $result   = $mapper->remove(['email' => 'username@example.com']);
+//        $document = $mapper->get($id);
+//
+//        $this->assertTrue($result);
+//        $this->assertNull($document);
+//
+//        $mapper->getCollection()->drop();
+//    }
+} 

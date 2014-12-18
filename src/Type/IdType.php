@@ -2,7 +2,10 @@
 
 namespace Echidna\Type;
 
-class IdType extends StringType
+
+use DataEntity\Type;
+
+class IdType extends Type
 {
 
     public function validate($value)
@@ -18,26 +21,21 @@ class IdType extends StringType
         return ($value instanceof \MongoId);
     }
 
-    public function filter($value)
-    {
-        if ($value instanceof \MongoId) {
-            $value = (string) $value;
-            $value = parent::filter($value);
-        }
-
-        return !empty($value) ? $value : null;
-    }
-
-    public function filterMongo($value)
+    public function filter($value, $context = null)
     {
         if (is_string($value)) {
             try {
                 $value = new \MongoId($value);
             } catch (\MongoException $e) {
-                $value = new \MongoId();
+                return null;
             }
         }
 
-        return ($value instanceof \MongoId) ? $value : null;
+        if (!($value instanceof \MongoId)) return null;
+
+        return
+            $context === 'mongo'
+                ? $value
+                : (string)$value;
     }
-}
+} 

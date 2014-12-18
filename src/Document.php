@@ -1,79 +1,22 @@
 <?php
-
 namespace Echidna;
 
-use DataObject\Entity;
+use DataEntity\Entity;
+use Sabre\Event\EventEmitterInterface;
 
 class Document extends Entity implements DocumentInterface
 {
 
     use MapperTrait;
 
-    /** @var  string */
-    protected static $collection = "echidna_document";
+    /** @var string */
+    protected static $collection;
 
-    private $new = true;
-
-    /** @var array */
-    private $refs = null;
-
-    /** @var MapperInterface */
-    private $builder = null;
-
-    /**
-     * Mapper class
-     *
-     * @var string
-     */
+    /** @var string */
     protected static $mapper_class = "Echidna\\Mapper";
 
-    public function getReferences()
-    {
-        if (null === $this->refs) {
-            $definition = is_array(static::references()) ? static::references() : [];
-
-            foreach ($definition as $offset => $value) {
-                $offset              = trim(strval($offset));
-                $this->refs[$offset] = Echidna::reference($this, $offset, $value);
-            }
-        }
-
-        return $this->refs;
-    }
-
-    public function offsetGet($offset)
-    {
-        $value = parent::offsetGet($offset);
-
-        if ($value) return $value;
-
-        $mapper = $this->getMapper();
-        $ref    = Echidna::buildReference($this, $offset);
-
-        if ($ref['field'] && $ref['document'] && $mapper) {
-            $mapper = Echidna::buildMapper($mapper->getDatabase(), $ref['document']);
-
-            try {
-                $value = $mapper->get($this[$ref['field']]);
-            } catch (\Exception $e) {
-                $value = null;
-            }
-
-            parent::offsetSet($offset, $value);
-
-            return $value;
-        }
-
-        return null;
-    }
-
-
-    public function setNew($new)
-    {
-        $this->new = $new === true;
-
-        return $this;
-    }
+    /** @var bool */
+    private $new = true;
 
     /**
      * @return bool
@@ -84,39 +27,53 @@ class Document extends Entity implements DocumentInterface
     }
 
     /**
-     * @param $type
+     * @param bool $new
      *
-     * @return TypeInterface
+     * @return $this
      */
-    protected function getType($type)
+    public function setNew($new)
     {
-        return Echidna::buildType($type);
+        $this->new = $new === true;
+
+        return $this;
     }
 
     /**
      * @return array
      */
-    public function getMongoData()
-    {
-        $data  = $this->getRawData();
-        $array = [];
-        foreach ($data as $offset => $value) {
-            if (!$value) $value = $this->getDefault($offset);
-
-            $type  = $this->getFieldType($offset);
-            $value = $type->filterMongo($value);
-
-            $array[$offset] = $value;
-        }
-
-        return $array;
-    }
-
     public function toArray()
     {
-        return parent::getData();
+        return array_map(function ($value) {
+            if ($value instanceof DocumentInterface) $value = $value->toArray();
+
+            return $value;
+        }, $this->getData());
     }
 
+    /**
+     * @param string|\DataEntity\TypeInterface $type
+     *
+     * @return \DataEntity\TypeInterface
+     */
+    protected function getType($type)
+    {
+        return Echidna::type($type);
+    }
+
+    /**
+     * @return string
+     * @throws \LogicException
+     */
+    public static function collection()
+    {
+        if (null === static::$collection) throw new \LogicException("I don't know my collection.");
+
+        return static::$collection;
+    }
+
+    /**
+     * @return string
+     */
     public static function mapper()
     {
         if (!(class_implements(static::$mapper_class, "Echidna\\MapperInterface"))) static::$mapper_class = "Echidna\\Mapper";
@@ -124,28 +81,28 @@ class Document extends Entity implements DocumentInterface
         return static::$mapper_class;
     }
 
-    public static function collection()
-    {
-        return static::$collection;
-    }
-
+    /**
+     * @return array
+     */
     public static function fields()
     {
-        return [
-            '_id'         => ['type' => 'id', 'default' => new \MongoId()],
-            'date_create' => ['type' => 'date', 'default' => new \DateTime()],
-            'date_update' => ['type' => 'date', 'default' => null],
-        ];
+        return [];
     }
 
+    /**
+     * return array
+     */
     public static function references()
     {
 
     }
 
-    public static function events(EventEmitterInterface $eventEmitter)
+    /**
+     * @param EventEmitterInterface $emitter
+     */
+    public static function events(EventEmitterInterface $emitter)
     {
 
     }
 
-} 
+}

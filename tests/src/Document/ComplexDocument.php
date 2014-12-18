@@ -2,12 +2,8 @@
 
 namespace EchidnaTest\Document;
 
-use Echidna\Document;
-
-class TestDocument extends Document
+class ComplexDocument extends SimpleDocument
 {
-    protected static $collection = 'test';
-    protected static $mapper_class = "EchidnaTest\\Document\\TestMapper";
 
     public static function fields()
     {
@@ -20,7 +16,7 @@ class TestDocument extends Document
         $fields['string']          = ['type' => 'string'];
         $fields['string_default']  = ['type' => 'string', 'default' => 'hello world'];
         $fields['email']           = ['type' => 'email'];
-        $fields['email_default']   = ['type' => 'email', 'username@example.com'];
+        $fields['email_default']   = ['type' => 'email', 'default' => 'username@example.com'];
         $fields['float']           = ['type' => 'float'];
         $fields['float_default']   = ['type' => 'float', 'default' => 3.14];
         $fields['ip']              = ['type' => 'ip'];

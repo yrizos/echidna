@@ -1,5 +1,4 @@
 <?php
-
 namespace EchidnaTest;
 
 class Base extends \PHPUnit_Framework_TestCase
@@ -14,15 +13,11 @@ class Base extends \PHPUnit_Framework_TestCase
     {
         $connection     = new \MongoClient('mongodb://localhost:27017', ['connect' => true, 'connectTimeoutMS' => -1, 'journal' => true]);
         $this->database = $connection->selectDB('echidna_test');
-
         $this->database->drop();
 
         for ($i = 0; $i < 5; $i++) {
-            $this->data[] = [
-                'username' => 'username' . $i,
-                'password' => 'password' . $i,
-                'email'    => 'username' . $i . '@example.com'
-            ];
+            $this->data[] = 'value ' . $i;
         }
     }
-}
+
+} 

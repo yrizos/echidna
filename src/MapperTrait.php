@@ -1,20 +1,20 @@
 <?php
-
 namespace Echidna;
 
 trait MapperTrait
 {
-    /** @var MapperInterface */
+
+    /** @var  MapperInterface */
     private $mapper;
 
-    public function setMapper(MapperInterface $mapper)
+    final public function setMapper(MapperInterface $mapper)
     {
         $this->mapper = $mapper;
 
         return $this;
     }
 
-    public function getMapper()
+    final public function getMapper()
     {
         return $this->mapper;
     }

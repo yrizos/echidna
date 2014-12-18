@@ -1,21 +1,26 @@
 <?php
-
 namespace Echidna;
 
 interface MapperInterface
 {
 
-    public function __construct(\MongoDB $database, $entity);
+    public function __construct(\MongoDB $database, $document);
+
+    public function setDocument($document);
+
+    public function getDocument();
+
+    public function setDatabase(\MongoDB $database);
 
     public function getDatabase();
 
     public function getCollection();
 
-    public function getDocument();
-
     public function getEventEmitter();
 
     public function emit(DocumentInterface $document, array $events = []);
+
+    public function save(&$document);
 
     public function get($id);
 
@@ -27,5 +32,5 @@ interface MapperInterface
 
     public function delete($id);
 
-    public function save(&$document);
-}
+    public function remove(array $query = []);
+} 
