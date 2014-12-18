@@ -69,11 +69,17 @@ class Cursor implements CursorInterface
                 : null;
     }
 
+    /**
+     * @return string
+     */
     final public function key()
     {
         return $this->getCursor()->key();
     }
 
+    /**
+     * @return bool
+     */
     final public function valid()
     {
         return $this->getCursor()->valid();
@@ -84,16 +90,25 @@ class Cursor implements CursorInterface
         return $this->getCursor()->rewind();
     }
 
+    /**
+     * @return int
+     */
     public function count()
     {
         return $this->getCursor()->count(false);
     }
 
+    /**
+     * @return array
+     */
     public function getData()
     {
         return iterator_to_array($this);
     }
 
+    /**
+     * @return array
+     */
     public function toArray()
     {
         $data = $this->getData();

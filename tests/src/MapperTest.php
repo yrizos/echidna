@@ -4,6 +4,7 @@ namespace EchidnaTest;
 use Echidna\Echidna;
 use EchidnaTest\Document\EventfulDocument;
 use EchidnaTest\Document\ComplexDocument;
+use EchidnaTest\Document\SimpleDocument;
 
 class MapperTest extends Base
 {
@@ -187,24 +188,26 @@ class MapperTest extends Base
 
         $mapper->getCollection()->drop();
     }
-//
-//    public function testRemove()
-//    {
-//        $document = Echidna::buildDocument($mapper->getDocument(), ['email' => 'username@example.com']);
-//        $mapper->save($document);
-//
-//        $id       = $document['_id'];
-//        $document = $mapper->get($id);
-//
-//        $this->assertInstanceOf("Echidna\\DocumentInterface", $document);
-//        $this->assertEquals($id, $document['_id']);
-//
-//        $result   = $mapper->remove(['email' => 'username@example.com']);
-//        $document = $mapper->get($id);
-//
-//        $this->assertTrue($result);
-//        $this->assertNull($document);
-//
-//        $mapper->getCollection()->drop();
-//    }
+
+    public function testRemove()
+    {
+        $mapper   = Echidna::mapper($this->database, "EchidnaTest\\Document\\SimpleDocument");
+        $document = new SimpleDocument();
+        $document->setData(['string' => 'value']);
+        $mapper->save($document);
+
+        $id       = $document['_id'];
+        $document = $mapper->get($id);
+
+        $this->assertInstanceOf("Echidna\\DocumentInterface", $document);
+        $this->assertEquals($id, $document['_id']);
+
+        $result   = $mapper->remove(['string' => 'value']);
+        $document = $mapper->get($id);
+
+        $this->assertTrue($result);
+        $this->assertNull($document);
+
+        $mapper->getCollection()->drop();
+    }
 } 
