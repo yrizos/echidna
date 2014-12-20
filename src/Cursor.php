@@ -66,8 +66,7 @@ class Cursor implements CursorInterface
             $ref    = $document_references[$offset];
             $values = [];
             foreach ($documents as $document) {
-                $filtered = $document->getFilteredData('mongo');
-                $values[] = $filtered[$ref['local_field']];
+                $values[] = $document->getFilteredValue($ref['local_field'], 'mongo');
             }
 
             $items = Echidna::lookupReference($database, $ref, $values);

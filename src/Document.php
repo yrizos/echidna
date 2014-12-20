@@ -32,14 +32,13 @@ class Document extends Entity implements DocumentInterface
             if (null !== $reference['value']) return $reference['value'];
 
             $database    = $this->getDatabase();
-            $local_value = $this[$reference['local_field']];
+            $local_value = $this->getFilteredValue($reference['local_field'], 'mongo');
 
             if (!(null === $database || null === $local_value)) {
-                $reference['value']        = Echidna::lookupReference($database, $reference, $local_value);
-                $this->references[$offset] = $reference;
+                $this->references[$offset]['value'] = Echidna::lookupReference($database, $reference, $local_value);
             }
 
-            return $reference['value'];
+            return $this->references[$offset]['value'];
         }
 
         return parent::offsetGet($offset);

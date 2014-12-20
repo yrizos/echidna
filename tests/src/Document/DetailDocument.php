@@ -18,10 +18,10 @@ class DetailDocument extends Document
         return $fields;
     }
 
-//    public static function references()
-//    {
-//        return [
-//            'detail' => ['type' => Reference::HAS_MANY, 'local_field' => '_id', 'foreign_document' => "EchidnaTest\\Document\\DetailDocument", 'foreign_field' => 'master_id']
-//        ];
-//    }
+    public static function references()
+    {
+        return [
+            'master' => ['type' => Reference::HAS_ONE, 'local_field' => 'master_id', 'foreign_document' => "EchidnaTest\\Document\\MasterDocument", 'foreign_field' => '_id']
+        ];
+    }
 } 

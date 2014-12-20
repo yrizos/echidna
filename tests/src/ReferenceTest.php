@@ -64,7 +64,7 @@ class ReferenceTest extends Base
         $this->assertEquals("EchidnaTest\\Document\\DetailDocument", $detail['foreign_document']);
     }
 
-    public function testLazyLoad()
+    public function testLazyLoad1()
     {
         $master_mapper = new Mapper($this->database, "EchidnaTest\\Document\\MasterDocument");
 
@@ -78,6 +78,24 @@ class ReferenceTest extends Base
                 $detail_id = (string) $value['_id'];
                 $this->assertInstanceOf("EchidnaTest\\Document\\DetailDocument", $value);
                 $this->assertContains($detail_id, $detail_ids);
+            }
+        }
+    }
+
+    public function testLazyLoad2()
+    {
+        $detail_mapper = new Mapper($this->database, "EchidnaTest\\Document\\DetailDocument");
+
+        foreach ($this->ids as $master_id => $detail_ids) {
+            foreach ($detail_ids as $detail_id) {
+                $document = $detail_mapper->get($detail_id);
+
+                $this->assertInstanceOf("EchidnaTest\\Document\\DetailDocument", $document);
+
+                $master = $document['master'];
+
+                $this->assertInstanceOf("EchidnaTest\\Document\\MasterDocument", $master);
+                $this->assertEquals($master_id, $master['_id']);
             }
         }
     }
@@ -100,8 +118,6 @@ class ReferenceTest extends Base
                 $this->assertContains($detail_id, $detail_ids);
             }
         }
-
-
     }
 
 }
