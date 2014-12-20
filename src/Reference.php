@@ -1,60 +1,31 @@
 <?php
 namespace Echidna;
 
-class Reference implements ReferenceInterface
+class Reference extends Entity implements ReferenceInterface
 {
 
-    /** @var string */
-    private $name;
+    const HAS_ONE  = 1;
+    const HAS_MANY = 2;
 
-    /** @var mixed */
-    private $type;
-
-    /** @var string */
-    private $local_collection;
-
-    /** @var string */
-    private $local_field;
-
-    /** @var string */
-    private $foreign_collection;
-
-    /** @var string */
-    private $foreign_field;
-
-    public function __construct($name, $type, $local_collection, $local_field, $foreign_collection, $foreign_field)
+    public function __construct($type, $local_document, $local_field, $foreign_document, $foreign_field)
     {
-
+        $this['type']             = $type;
+        $this['local_document']   = $local_document;
+        $this['local_field']      = $local_field;
+        $this['foreign_document'] = $foreign_document;
+        $this['foreign_field']    = $foreign_field;
     }
 
-    public function getName()
+    public static function fields()
     {
-        return $this->name;
-    }
-
-    public function getType()
-    {
-        return $this->type;
-    }
-
-    public function getLocalCollection()
-    {
-        return $this->local_collection;
-    }
-
-    public function getLocalField()
-    {
-        return $this->getLocalField();
-    }
-
-    public function getForeignCollection()
-    {
-        return $this->foreign_collection;
-    }
-
-    public function getForeignCollectionField()
-    {
-        return $this->foreign_collection;
+        return [
+            'type'             => ['type' => 'integer'],
+            'local_document'   => ['type' => 'document'],
+            'local_field'      => ['type' => 'string'],
+            'foreign_document' => ['type' => 'document'],
+            'foreign_field'    => ['type' => 'string'],
+            'value'            => ['type' => 'raw'],
+        ];
     }
 
 } 

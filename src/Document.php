@@ -1,7 +1,6 @@
 <?php
 namespace Echidna;
 
-use DataEntity\Entity;
 use Sabre\Event\EventEmitterInterface;
 
 class Document extends Entity implements DocumentInterface
@@ -17,6 +16,50 @@ class Document extends Entity implements DocumentInterface
 
     /** @var bool */
     private $new = true;
+
+    /** @var array */
+    private $references;
+
+    /**
+     * @param string $offset
+     * @return mixed
+     */
+    public function offsetGet($offset)
+    {
+        $reference = $this->getReference($offset);
+
+        if ($reference) {
+            if (null !== $reference['value']) return $reference['value'];
+
+            $database    = $this->getDatabase();
+            $local_value = $this[$reference['local_field']];
+
+            if (!(null === $database || null === $local_value)) {
+                $reference['value']        = Echidna::lookupReference($database, $reference, $local_value);
+                $this->references[$offset] = $reference;
+            }
+
+            return $reference['value'];
+        }
+
+        return parent::offsetGet($offset);
+    }
+
+    /**
+     * @param string $offset
+     * @param mixed $value
+     */
+    public function offsetSet($offset, $value)
+    {
+        $reference = $this->getReference($offset);
+
+        if ($reference) {
+            $reference['value']        = $value;
+            $this->references[$offset] = $reference;
+        } else {
+            parent::offsetSet($offset, $value);
+        }
+    }
 
     /**
      * @return bool
@@ -41,6 +84,46 @@ class Document extends Entity implements DocumentInterface
     /**
      * @return array
      */
+    public function getReferences()
+    {
+        if (null === $this->references) {
+            $this->references = [];
+            $definition       = is_array(static::references()) ? static::references() : [];
+
+            foreach ($definition as $name => $reference) {
+                $name = trim(strval($name));
+                if (empty($name)) continue;
+
+                if (is_array($reference)) {
+                    $type             = isset($reference['type']) ? $reference['type'] : Reference::HAS_ONE;
+                    $local_document   = $this;
+                    $local_field      = isset($reference['local_field']) ? $reference['local_field'] : null;
+                    $foreign_document = isset($reference['foreign_document']) ? $reference['foreign_document'] : null;
+                    $foreign_field    = isset($reference['foreign_field']) ? $reference['foreign_field'] : null;
+                    $reference        = new Reference($type, $local_document, $local_field, $foreign_document, $foreign_field);
+                }
+
+                if ($reference instanceof ReferenceInterface) {
+                    $this->references[$name] = $reference;
+                }
+            }
+        }
+
+        return $this->references;
+    }
+
+    /**
+     * @param string $offset
+     * @return bool
+     */
+    private function getReference($offset)
+    {
+        return isset($this->getReferences()[$offset]) ? $this->getReferences()[$offset] : null;
+    }
+
+    /**
+     * @return array
+     */
     public function toArray()
     {
         return array_map(function ($value) {
@@ -48,16 +131,6 @@ class Document extends Entity implements DocumentInterface
 
             return $value;
         }, $this->getData());
-    }
-
-    /**
-     * @param string|\DataEntity\TypeInterface $type
-     *
-     * @return \DataEntity\TypeInterface
-     */
-    protected function getType($type)
-    {
-        return Echidna::type($type);
     }
 
     /**
@@ -94,7 +167,7 @@ class Document extends Entity implements DocumentInterface
      */
     public static function references()
     {
-
+        return [];
     }
 
     /**

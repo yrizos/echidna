@@ -1,21 +1,11 @@
 <?php
 namespace Echidna;
 
-interface ReferenceInterface
+use DataEntity\EntityInterface;
+
+interface ReferenceInterface extends EntityInterface
 {
 
-    public function __construct($name, $type, $local_collection, $local_field, $foreign_collection, $foreign_field);
+    public function __construct($type, $local_document, $local_field, $foreign_document, $foreign_field);
 
-    public function getName();
-
-    public function getType();
-
-    public function getLocalCollection();
-
-    public function getLocalField();
-
-    public function getForeignCollection();
-
-    public function getForeignCollectionField();
-
-} 
+}

@@ -11,6 +11,8 @@ interface DocumentInterface extends EntityInterface, ResultInterface
 
     public function setNew($new);
 
+    public function getReferences();
+
     public static function collection();
 
     public static function mapper();

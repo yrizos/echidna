@@ -11,7 +11,7 @@ class Cursor implements CursorInterface
     private $cursor;
 
     /**
-     * @param \MongoCursor    $cursor
+     * @param \MongoCursor $cursor
      * @param MapperInterface $mapper
      */
     public function __construct(\MongoCursor $cursor, MapperInterface $mapper = null)
@@ -39,6 +39,75 @@ class Cursor implements CursorInterface
     public function getCursor()
     {
         return $this->cursor;
+    }
+
+    /**
+     * @param string|array $reference
+     */
+    public function with($reference)
+    {
+        $documents  = $this->getData();
+        $database   = $this->getDatabase();
+        $references = $this->normalizeReference($reference);
+
+        if (
+            empty($documents)
+            || empty($database)
+            || empty($references)
+        ) return null;
+
+        $document_instance   = current($documents);
+        $document_references = $document_instance->getReferences();
+
+        $result = [];
+        foreach ($references as $offset) {
+            if (!isset($document_references[$offset])) continue;
+
+            $ref    = $document_references[$offset];
+            $values = [];
+            foreach ($documents as $document) {
+                $filtered = $document->getFilteredData('mongo');
+                $values[] = $filtered[$ref['local_field']];
+            }
+
+            $items = Echidna::lookupReference($database, $ref, $values);
+
+            foreach ($items as $item) {
+                $master_id = $item[$ref['foreign_field']];
+                $item_id   = (string) $item['_id'];
+
+                if ($ref['type'] == Reference::HAS_ONE) {
+                    $result[$master_id][$offset] = $item;
+                } else {
+                    $result[$master_id][$offset][$item_id] = $item;
+                }
+            }
+        }
+
+        foreach ($result as $id => $item) {
+            foreach ($item as $offset => $value) {
+                $documents[$id][$offset] = $value;
+            }
+        }
+
+        unset($result);
+
+        return $documents;
+    }
+
+    private function normalizeReference($reference)
+    {
+        if (is_string($reference)) $reference = [$reference];
+        if (!is_array($reference)) return null;
+
+        $reference = array_map('trim', $reference);
+        $reference = array_filter($reference, function ($value) {
+            return !empty($value);
+        });
+
+        if (empty($reference)) return null;
+
+        return $reference;
     }
 
     /**

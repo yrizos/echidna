@@ -18,4 +18,11 @@ trait MapperTrait
     {
         return $this->mapper;
     }
+
+    final public function getDatabase()
+    {
+        $mapper = $this->getMapper();
+
+        return null !== $mapper ? $mapper->getDatabase() : null;
+    }
 } 

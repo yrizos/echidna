@@ -66,6 +66,15 @@ class Echidna
         return Type::factory($type);
     }
 
+    /**
+     * @param DocumentInterface|string $document
+     * @param array $data
+     * @param bool $isNew
+     * @param MapperInterface $mapper
+     * @param array $events
+     * @return DocumentInterface
+     * @throws \InvalidArgumentException
+     */
     public static function document($document, array $data = null, $isNew = true, MapperInterface $mapper = null, array $events = [])
     {
         if (!($document instanceof DocumentInterface)) {
@@ -92,6 +101,19 @@ class Echidna
         }
 
         return $document;
+    }
+
+    public static function lookupReference(\MongoDB $database, ReferenceInterface $reference, $local_value)
+    {
+        $foreign_mapper = $reference['foreign_document']::mapper();
+        $foreign_mapper = new $foreign_mapper($database, $reference['foreign_document']);
+        $function       = $reference['type'] == Reference::HAS_ONE ? 'findOne' : 'find';
+        $lookup         = is_array($local_value) ? [$reference['foreign_field'] => ['$in' => $local_value]] : [$reference['foreign_field'] => $local_value];
+        $result         = $foreign_mapper->$function($lookup);
+
+        if ($result instanceof CursorInterface) $result = $result->getData();
+
+        return $result;
     }
 
 } 
