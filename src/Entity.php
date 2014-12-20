@@ -15,12 +15,4 @@ class Entity extends DataEntity
     {
         return Echidna::type($type);
     }
-
-    public function getFilteredValue($offset, $context = null)
-    {
-        $field = $this->getField($offset);
-        $value = $this[$offset];
-
-        return $field->filter($value, $context);
-    }
-} 
+}
