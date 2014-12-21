@@ -52,7 +52,7 @@ class MapperTest extends Base
         $this->assertFalse($document['after_save']);
         $this->assertFalse($document['after_get']);
 
-        $mapper->save($document);
+        $document = $mapper->save($document);
 
         $this->assertInstanceOf("Echidna\\DocumentInterface", $document);
         $this->assertFalse($document->isNew());
@@ -83,7 +83,7 @@ class MapperTest extends Base
         $document = $mapper->get($id);
 
         $this->assertInstanceOf("Echidna\\DocumentInterface", $document);
-        $this->assertEquals((string)$id, $document['_id']);
+        $this->assertEquals((string) $id, $document['_id']);
         $this->assertFalse($document->isNew());
         $this->assertTrue($document['after_get']);
 

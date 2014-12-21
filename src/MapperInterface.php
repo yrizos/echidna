@@ -20,7 +20,7 @@ interface MapperInterface
 
     public function emit(DocumentInterface $document, array $events = []);
 
-    public function save(&$document);
+    public function save($document);
 
     public function get($id);
 

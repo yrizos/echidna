@@ -21,7 +21,7 @@ class Mapper implements MapperInterface
     private static $eventEmitter;
 
     /**
-     * @param \MongoDB                 $database
+     * @param \MongoDB $database
      * @param string|DocumentInterface $document
      */
     public function __construct(\MongoDB $database, $document)
@@ -98,7 +98,7 @@ class Mapper implements MapperInterface
 
     /**
      * @param DocumentInterface $document
-     * @param array             $events
+     * @param array $events
      *
      * @return $this
      */
@@ -115,7 +115,7 @@ class Mapper implements MapperInterface
      * @return bool
      * @throws \Exception
      */
-    public function save(&$document)
+    public function save($document)
     {
         $data = null;
 
@@ -136,7 +136,7 @@ class Mapper implements MapperInterface
 
         $this->emit($document, ['after_save']);
 
-        return true;
+        return $document;
     }
 
     /**
